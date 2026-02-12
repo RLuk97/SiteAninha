@@ -1,26 +1,23 @@
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 import { put } from '@vercel/blob';
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ ok: false, message: 'Método não permitido' }), {
-      status: 405,
-      headers: { 'content-type': 'application/json' },
-    });
+    res.status(405).json({ ok: false, message: 'Método não permitido' });
+    return;
   }
-  const url = new URL(req.url);
-  const filename = url.searchParams.get('filename') || `upload-${Date.now()}`;
-  const contentType = req.headers.get('content-type') || 'application/octet-stream';
+  const filename = (req.query?.filename) || `upload-${Date.now()}`;
+  const contentType = req.headers['content-type'] || 'application/octet-stream';
   try {
-    const blob = await put(filename, req.body, { access: 'public', contentType });
-    return new Response(JSON.stringify({ ok: true, url: blob.url, filename: filename }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
+    const buffer = await new Promise((resolve, reject) => {
+      const chunks = [];
+      req.on('data', c => chunks.push(c));
+      req.on('end', () => resolve(Buffer.concat(chunks)));
+      req.on('error', reject);
     });
+    const blob = await put(filename, buffer, { access: 'public', contentType });
+    res.status(200).json({ ok: true, url: blob.url, filename });
   } catch (err) {
-    return new Response(JSON.stringify({ ok: false, message: 'Falha no upload' }), {
-      status: 500,
-      headers: { 'content-type': 'application/json' },
-    });
+    res.status(500).json({ ok: false, message: 'Falha no upload' });
   }
 }
