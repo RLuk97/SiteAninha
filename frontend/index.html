@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Natura & Avon - Loja da Aninha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="#" class="logo">
+          <div class="logo-icon">❤</div>
+          <div class="logo-text">
+            <h1>Natura & Avon</h1>
+            <span>Loja da Aninha</span>
+          </div>
+        </a>
+        
+        <nav class="nav-desktop">
+          <a href="#home">Início</a>
+          <a href="#about">Sobre</a>
+          <a href="#products">Produtos</a>
+          <a href="#contact">Contato</a>
+        </nav>
+        
+        <div class="header-actions">
+          <button class="btn-icon" onclick="openAdmin()" title="Área Admin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </button>
+          <button class="btn-icon cart-btn" onclick="toggleCart()" title="Carrinho">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+            <span class="cart-count" id="cartCount">0</span>
+          </button>
+          <button class="btn-icon menu-btn" onclick="toggleMenu()" title="Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-header">
+      <span>Menu</span>
+      <button onclick="toggleMenu()">✕</button>
+    </div>
+    <nav>
+      <a href="#home" onclick="toggleMenu()">Início</a>
+      <a href="#about" onclick="toggleMenu()">Sobre</a>
+      <a href="#products" onclick="toggleMenu()">Produtos</a>
+      <a href="#contact" onclick="toggleMenu()">Contato</a>
+      <a href="#" onclick="toggleMenu(); openAdmin()">Área Admin</a>
+    </nav>
+  </div>
+
+  <!-- Hero Slider -->
+  <section class="hero" id="home">
+    <div class="slider" id="heroSlider">
+      <div class="slide active" style="background-image: url('images/hero-1.jpg')">
+        <div class="slide-overlay"></div>
+        <div class="slide-content">
+          <h2>Beleza que inspira confiança</h2>
+          <p>Descubra a sua essência com produtos Natura e Avon</p>
+          <a href="#products" class="btn-primary">Explore Agora</a>
+        </div>
+      </div>
+      <div class="slide" style="background-image: url('images/hero-2.jpg')">
+        <div class="slide-overlay"></div>
+        <div class="slide-content">
+          <h2>Fragrâncias que encantam</h2>
+          <p>Perfumes e colônias para todos os momentos</p>
+          <a href="#products" class="btn-primary">Ver Perfumes</a>
+        </div>
+      </div>
+      <div class="slide" style="background-image: url('images/hero-3.jpg')">
+        <div class="slide-overlay"></div>
+        <div class="slide-content">
+          <h2>Cuidado com a sua pele</h2>
+          <p>Skincare de qualidade para um brilho natural</p>
+          <a href="#products" class="btn-primary">Ver Skincare</a>
+        </div>
+      </div>
+      <div class="slide" style="background-image: url('images/hero-4.jpg')">
+        <div class="slide-overlay"></div>
+        <div class="slide-content">
+          <h2>Beleza dos cabelos</h2>
+          <p>Linha completa para cuidar dos seus fios</p>
+          <a href="#products" class="btn-primary">Ver Cabelo</a>
+        </div>
+      </div>
+    </div>
+    <button class="slider-btn prev" onclick="changeSlide(-1)">❮</button>
+    <button class="slider-btn next" onclick="changeSlide(1)">❯</button>
+    <div class="slider-dots" id="sliderDots"></div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-image">
+          <img src="images/about-image.jpg" alt="Vendedora Natura e Avon">
+          <div class="about-badge">
+            <span>⭐</span>
+            <div>
+              <strong>Consultora</strong>
+              <small>Credenciada desde 2019</small>
+            </div>
+          </div>
+        </div>
+        <div class="about-content">
+          <span class="section-tag">Sobre Mim</span>
+          <h2>Mais de <span class="highlight">5 mil produtos</span> vendidos com amor</h2>
+          <p>Olá! Sou uma consultora apaixonada pelos produtos Natura e Avon, dedicada a ajudar mulheres a encontrarem sua melhor versão através da beleza com propósito.</p>
+          <p>Há mais de 5 anos, venho construindo relacionamentos verdadeiros com minhas clientes, oferecendo não apenas produtos de qualidade, mas também um atendimento personalizado e carinhoso.</p>
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-icon">🛍</span>
+              <strong>5.000+</strong>
+              <span>Produtos Vendidos</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-icon">👥</span>
+              <strong>200+</strong>
+              <span>Clientes Satisfeitas</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-icon">⏰</span>
+              <strong>5+</strong>
+              <span>Anos de Experiência</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-icon">✓</span>
+              <strong>100%</strong>
+              <span>Produtos Originais</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section class="products" id="products">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Nossos Produtos</span>
+        <h2>Catálogo <span class="highlight">Exclusivo</span></h2>
+        <p>Descubra nossa seleção de produtos Natura e Avon, cuidadosamente escolhidos para você.</p>
+      </div>
+      
+      <div class="filters">
+        <div class="search-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Buscar produtos..." onkeyup="filterProducts()">
+        </div>
+        <div class="category-filters">
+          <button class="filter-btn active" data-category="all" onclick="setCategory('all')">Todos</button>
+          <button class="filter-btn" data-category="perfumes" onclick="setCategory('perfumes')">Perfumes</button>
+          <button class="filter-btn" data-category="colonias" onclick="setCategory('colonias')">Colônias</button>
+          <button class="filter-btn" data-category="cabelo" onclick="setCategory('cabelo')">Cabelo</button>
+          <button class="filter-btn" data-category="corpo" onclick="setCategory('corpo')">Corpo</button>
+          <button class="filter-btn" data-category="maquiagem" onclick="setCategory('maquiagem')">Maquiagem</button>
+        </div>
+      </div>
+      
+      <div class="products-grid" id="productsGrid"></div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="contact" id="contact">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Entre em Contato</span>
+        <h2>Vamos <span class="highlight">Conversar</span></h2>
+        <p>Estou aqui para ajudar você a encontrar os melhores produtos.</p>
+      </div>
+      
+      <div class="contact-grid">
+        <div class="contact-info">
+          <div class="contact-card">
+            <span class="contact-icon">📞</span>
+            <div>
+              <small>Telefone/WhatsApp</small>
+              <strong>(92) 98466-3068</strong>
+            </div>
+          </div>
+          <div class="contact-card">
+            <span class="contact-icon">✉</span>
+            <div>
+              <small>E-mail</small>
+              <strong>contato@lojadamae.com</strong>
+            </div>
+          </div>
+          <div class="contact-card">
+            <span class="contact-icon">📍</span>
+            <div>
+              <small>Localização</small>
+              <strong>Amazonas, AM</strong>
+            </div>
+          </div>
+          <div class="contact-card">
+            <span class="contact-icon">🕐</span>
+            <div>
+              <small>Horário de Atendimento</small>
+              <strong>Seg-Dom: 9h às 20h</strong>
+            </div>
+          </div>
+          
+          <div class="social-links">
+            <a href="https://wa.me/5592984663068" class="social-btn" title="WhatsApp">💬</a>
+          </div>
+        </div>
+        
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo">
+            <div class="logo-icon">❤</div>
+            <div class="logo-text">
+              <h3>Natura & Avon</h3>
+              <span>Loja da Aninha</span>
+            </div>
+          </div>
+          <p>Beleza com propósito. Produtos originais Natura e Avon com atendimento personalizado.</p>
+          <div class="social-links">
+            <a href="https://wa.me/5592984663068" class="social-btn">💬</a>
+          </div>
+        </div>
+        
+        <div class="footer-links">
+          <h4>Navegação</h4>
+          <a href="#home">Início</a>
+          <a href="#about">Sobre</a>
+          <a href="#products">Produtos</a>
+          <a href="#contact">Contato</a>
+        </div>
+        
+        <div class="footer-links">
+          <h4>Categorias</h4>
+          <a href="#products">Perfumes</a>
+          <a href="#products">Cabelo</a>
+          <a href="#products">Corpo</a>
+          <a href="#products">Maquiagem</a>
+        </div>
+        
+        <div class="footer-links">
+          <h4>Atendimento</h4>
+          <a href="https://wa.me/5592984663068">WhatsApp</a>
+          <a href="#">Política de Entrega</a>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <p>© 2024 Natura & Avon - Loja da Aninha. Todos os direitos reservados.</p>
+        <p>Feito por RLD Code com ❤ para você</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart Drawer -->
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3>🛍 Seu Carrinho</h3>
+      <button onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+      <div class="delivery-info" id="deliveryInfo"></div>
+      <div class="cart-totals">
+        <div><span>Subtotal:</span> <span id="cartSubtotal">R$ 0,00</span></div>
+        <div><span>Entrega:</span> <span id="cartDelivery">R$ 15,00</span></div>
+        <div class="total"><span>Total:</span> <span id="cartTotal">R$ 0,00</span></div>
+      </div>
+      <button class="btn-primary btn-whatsapp" onclick="openCheckout()">
+        💬 Finalizar pelo WhatsApp
+      </button>
+      <button class="btn-secondary" onclick="toggleCart()">Continuar comprando</button>
+    </div>
+  </div>
+  <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+
+  <!-- Product Modal -->
+  <div class="modal" id="productModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeProductModal()">✕</button>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Checkout Modal -->
+  <div class="modal" id="checkoutModal">
+    <div class="modal-content checkout-modal">
+      <button class="modal-close" onclick="closeCheckout()">✕</button>
+      <div class="modal-header">
+        <h3>💬 Finalizar Pedido</h3>
+        <p>Preencha seus dados para enviarmos seu pedido pelo WhatsApp</p>
+      </div>
+      <form class="checkout-form" onsubmit="handleCheckout(event)">
+        <div class="form-group">
+          <label>Nome completo *</label>
+          <input type="text" id="checkoutName" placeholder="Digite seu nome" required>
+        </div>
+        <div class="form-group">
+          <label>Telefone (WhatsApp) *</label>
+          <input type="tel" id="checkoutPhone" placeholder="(92) 98466-3068" required>
+        </div>
+        <div class="form-group">
+          <label>Endereço de entrega *</label>
+          <input type="text" id="checkoutAddress" placeholder="Rua, número, bairro, cidade" required>
+        </div>
+        
+        <div class="payment-methods">
+          <label>Forma de Pagamento</label>
+          <div class="payment-options">
+            <label class="payment-option">
+              <input type="radio" name="payment" value="pix" checked>
+              <span>📱 PIX</span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="dinheiro">
+              <span>💵 Espécie</span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="cartao">
+              <span>💳 Cartão</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="checkout-summary">
+          <h4>Resumo do Pedido</h4>
+          <div id="checkoutSummary"></div>
+        </div>
+        
+        <div class="checkout-info">
+          <p>ℹ️ Ao finalizar, você será redirecionado para o WhatsApp onde confirmaremos seu pedido.</p>
+        </div>
+        
+        <button type="submit" class="btn-primary btn-whatsapp">
+          💬 Enviar Pedido pelo WhatsApp
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Modal -->
+  <div class="modal" id="adminModal">
+    <div class="modal-content admin-modal">
+      <button class="modal-close" onclick="closeAdmin()">✕</button>
+      <div class="admin-login" id="adminLogin">
+        <div class="admin-logo">❤</div>
+        <h3>Área Administrativa</h3>
+        <p>Acesse o painel de controle da loja</p>
+        <form onsubmit="handleAdminLogin(event)">
+          <div class="form-group">
+            <label>Usuário</label>
+            <input type="text" id="adminUser" placeholder="Digite seu usuário" required>
+          </div>
+          <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="adminPass" placeholder="Digite sua senha" required>
+          </div>
+          <button type="submit" class="btn-primary">Entrar</button>
+        </form>
+        <button class="btn-text" onclick="closeAdmin()">← Voltar para a loja</button>
+      </div>
+      <div class="admin-panel" id="adminPanel" style="display: none;">
+        <div class="admin-header">
+          <h3>Painel Administrativo</h3>
+          <button class="btn-secondary" onclick="adminLogout()">Sair</button>
+        </div>
+        <div class="admin-stats">
+          <div class="stat-box">
+            <span>📦</span>
+            <strong id="adminTotalProducts">0</strong>
+            <span>Total</span>
+          </div>
+          <div class="stat-box">
+            <span>✓</span>
+            <strong id="adminAvailableProducts">0</strong>
+            <span>Disponíveis</span>
+          </div>
+          <div class="stat-box">
+            <span>⚠</span>
+            <strong id="adminLowStockProducts">0</strong>
+            <span>Estoque Baixo</span>
+          </div>
+          <div class="stat-box">
+            <span>✕</span>
+            <strong id="adminOutOfStockProducts">0</strong>
+            <span>Esgotados</span>
+          </div>
+        </div>
+        <div class="admin-actions">
+          <button class="btn-primary" onclick="showAddProductForm()">+ Novo Produto</button>
+        </div>
+        <div class="admin-products" id="adminProducts"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Product Modal -->
+  <div class="modal" id="productFormModal">
+    <div class="modal-content product-form-modal">
+      <button class="modal-close" onclick="closeProductForm()">✕</button>
+      <div class="modal-header">
+        <h3 id="productFormTitle">Novo Produto</h3>
+      </div>
+      <form class="product-form" onsubmit="handleProductFormSubmit(event)">
+        <input type="hidden" id="editProductId">
+        <div class="form-group">
+          <label>Nome do Produto *</label>
+          <input type="text" id="productName" placeholder="Ex: Natura Luna" required>
+        </div>
+        <div class="form-group">
+          <label>Descrição *</label>
+          <textarea id="productDesc" placeholder="Descreva o produto..." rows="3" required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Preço (R$) *</label>
+            <input type="number" id="productPrice" step="0.01" min="0" placeholder="0,00" required>
+          </div>
+          <div class="form-group">
+            <label>Estoque *</label>
+            <input type="number" id="productStock" min="0" placeholder="0" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Categoria *</label>
+            <select id="productCategory" required>
+              <option value="perfumes">Perfumes</option>
+              <option value="colonias">Colônias</option>
+              <option value="cabelo">Cabelo</option>
+              <option value="corpo">Corpo</option>
+              <option value="maquiagem">Maquiagem</option>
+              <option value="skincare">Skincare</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Marca *</label>
+            <select id="productBrand" required>
+              <option value="Natura">Natura</option>
+              <option value="Avon">Avon</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Imagem do Produto *</label>
+          <input type="file" id="productImageFile" accept="image/*" required>
+          <input type="hidden" id="productImage">
+          <div id="productImagePreview"></div>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="productAvailable" checked>
+          <label for="productAvailable">Produto Disponível</label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeProductForm()">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar Produto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
