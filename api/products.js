@@ -1,4 +1,4 @@
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 import { kv } from '@vercel/kv';
 
 const seedProducts = [
@@ -21,19 +21,21 @@ async function listProducts() {
   return items;
 }
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   const method = req.method;
   if (method === 'GET') {
     const items = await listProducts();
-    return new Response(JSON.stringify({ ok: true, items }), { status: 200, headers: { 'content-type': 'application/json' } });
+    res.status(200).json({ ok: true, items });
+    return;
   }
   if (method === 'POST') {
     try {
-      const data = await req.json();
+      const data = req.body || {};
       const required = ['name', 'description', 'price', 'stock', 'category', 'brand', 'image', 'isAvailable'];
       for (const key of required) {
         if (data[key] === undefined || data[key] === null) {
-          return new Response(JSON.stringify({ ok: false, message: `Campo obrigatório: ${key}` }), { status: 400, headers: { 'content-type': 'application/json' } });
+          res.status(400).json({ ok: false, message: `Campo obrigatório: ${key}` });
+          return;
         }
       }
       const items = await listProducts();
@@ -45,10 +47,12 @@ export default async function handler(req) {
       };
       const next = [newItem, ...items];
       await kv.set('products', next);
-      return new Response(JSON.stringify({ ok: true, item: newItem }), { status: 201, headers: { 'content-type': 'application/json' } });
+      res.status(201).json({ ok: true, item: newItem });
+      return;
     } catch {
-      return new Response(JSON.stringify({ ok: false, message: 'Falha ao criar produto' }), { status: 500, headers: { 'content-type': 'application/json' } });
+      res.status(500).json({ ok: false, message: 'Falha ao criar produto' });
+      return;
     }
   }
-  return new Response(JSON.stringify({ ok: false, message: 'Método não permitido' }), { status: 405, headers: { 'content-type': 'application/json' } });
+  res.status(405).json({ ok: false, message: 'Método não permitido' });
 }
