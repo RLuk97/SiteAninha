@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Produtos
 async function initProducts() {
   try {
-    const res = await fetch('/api/products');
+    const res = await fetch('/api/catalog');
     const data = await res.json();
     if (res.ok && data?.ok && Array.isArray(data.items)) {
       products = data.items;
@@ -561,45 +561,26 @@ async function handleProductFormSubmit(e) {
     isAvailable: document.getElementById('productAvailable').checked,
   };
   
+  if (editingProductId) {
+    const index = products.findIndex(p => p.id === editingProductId);
+    if (index !== -1) products[index] = { ...products[index], ...productData };
+  } else {
+    const newProduct = { id: Date.now().toString(), ...productData };
+    products.unshift(newProduct);
+  }
   try {
-    if (editingProductId) {
-      const res = await fetch(`/api/products/${editingProductId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData),
-      });
-      const data = await res.json();
-      if (res.ok && data?.ok) {
-        const index = products.findIndex(p => p.id === editingProductId);
-        if (index !== -1) products[index] = data.item;
-        showNotification('Produto atualizado!');
-      } else {
-        throw new Error('Falha ao atualizar');
-      }
+    const res = await fetch('/api/catalog', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: products }),
+    });
+    if (res.ok) {
+      showNotification(editingProductId ? 'Produto atualizado!' : 'Produto criado!');
     } else {
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData),
-      });
-      const data = await res.json();
-      if (res.ok && data?.ok) {
-        products.unshift(data.item);
-        showNotification('Produto criado!');
-      } else {
-        throw new Error('Falha ao criar');
-      }
+      throw new Error('Falha ao salvar catálogo');
     }
   } catch {
-    if (editingProductId) {
-      const index = products.findIndex(p => p.id === editingProductId);
-      if (index !== -1) products[index] = { ...products[index], ...productData };
-      showNotification('Atualizado (offline)');
-    } else {
-      const newProduct = { id: Date.now().toString(), ...productData };
-      products.unshift(newProduct);
-      showNotification('Criado (offline)');
-    }
+    showNotification(editingProductId ? 'Atualizado (offline)' : 'Criado (offline)');
   }
   
   saveProducts();
@@ -611,11 +592,15 @@ async function handleProductFormSubmit(e) {
 
 async function deleteProduct(productId) {
   if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-  try {
-    const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Falha ao excluir');
-  } catch {}
   products = products.filter(p => p.id !== productId);
+  try {
+    const res = await fetch('/api/catalog', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: products }),
+    });
+    if (!res.ok) throw new Error('Falha ao salvar catálogo');
+  } catch {}
   saveProducts();
   renderProducts();
   updateAdminStats();
