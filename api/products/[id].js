@@ -1,11 +1,7 @@
 export const config = { runtime: 'nodejs' };
-import { sql } from '@vercel/postgres';
+import { neon } from '@neondatabase/serverless';
+const sql = neon(process.env.DATABASE_URL);
 
-const REDIS_URL =
-  process.env.UPSTASH_REDIS_REST_URL ||
-  process.env.UPSTASH_REDIS_URL ||
-  process.env.URL_REDIS ||
-  process.env.REDIS_URL;
 async function ensureTable() {
   await sql`
     CREATE TABLE IF NOT EXISTS products (
