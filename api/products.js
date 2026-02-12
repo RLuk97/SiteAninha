@@ -1,5 +1,6 @@
 export const config = { runtime: 'nodejs' };
-import { Redis } from '@upstash/redis';
+import { Redis as UpstashRedis } from '@upstash/redis';
+import IORedis from 'ioredis';
 
 const REDIS_URL =
   process.env.UPSTASH_REDIS_REST_URL ||
@@ -12,10 +13,38 @@ const REDIS_TOKEN =
   process.env.TOKEN_REDIS ||
   process.env.REDIS_TOKEN;
 
-const redis =
-  REDIS_URL && REDIS_TOKEN
-    ? new Redis({ url: REDIS_URL, token: REDIS_TOKEN })
-    : null;
+const hasUpstash = !!(process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL) && !!(process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN);
+const upstash = hasUpstash ? new UpstashRedis({ url: REDIS_URL, token: REDIS_TOKEN }) : null;
+const hasDsn = !!(process.env.URL_REDIS || process.env.REDIS_URL) && !hasUpstash;
+const io = hasDsn ? new IORedis(REDIS_URL, { lazyConnect: true, tls: REDIS_URL.startsWith('rediss://') ? {} : undefined }) : null;
+const store = upstash
+  ? {
+      async get(k) {
+        const v = await upstash.get(k);
+        if (typeof v === 'string') {
+          try { return JSON.parse(v); } catch { return v; }
+        }
+        return v;
+      },
+      async set(k, v) {
+        await upstash.set(k, v);
+      },
+    }
+  : io
+  ? {
+      async get(k) {
+        const v = await io.get(k);
+        if (typeof v === 'string') {
+          try { return JSON.parse(v); } catch { return v; }
+        }
+        return v;
+      },
+      async set(k, v) {
+        const data = typeof v === 'string' ? v : JSON.stringify(v);
+        await io.set(k, data);
+      },
+    }
+  : null;
 
 const seedProducts = [
   { id: '1', name: 'Natura Luna', description: 'Perfume feminino floral, notas de jasmim e sândalo. Uma fragrância delicada e sofisticada para momentos especiais.', price: 149.9, category: 'perfumes', brand: 'Natura', image: 'images/product-perfume-1.png', stock: 10, isAvailable: true, createdAt: Date.now(), updatedAt: Date.now() },
@@ -29,12 +58,12 @@ const seedProducts = [
 ];
 
 async function listProducts() {
-  if (!redis) {
+  if (!store) {
     return seedProducts;
   }
-  let items = await redis.get('products');
+  let items = await store.get('products');
   if (!items || !Array.isArray(items)) {
-    await redis.set('products', seedProducts);
+    await store.set('products', seedProducts);
     items = seedProducts;
   }
   return items;
@@ -57,7 +86,7 @@ export default async function handler(req, res) {
           return;
         }
       }
-      if (!redis) {
+      if (!store) {
         res.status(500).json({ ok: false, message: 'Redis não configurado. Adicione UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN.' });
         return;
       }
@@ -69,7 +98,7 @@ export default async function handler(req, res) {
         updatedAt: Date.now(),
       };
       const next = [newItem, ...items];
-      await redis.set('products', next);
+      await store.set('products', next);
       res.status(201).json({ ok: true, item: newItem });
       return;
     } catch {
