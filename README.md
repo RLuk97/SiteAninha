@@ -22,7 +22,6 @@ Sistema de catálogo e vendas com upload de imagens e checkout via WhatsApp.
    - Iniciar servidor:
      - `python loja-natura/backend/app.py`
    - Endpoints:
-     - `POST /api/auth/login` — body `{ "user": "AnaSantos", "pass": "Asantos1969" }`
      - `POST /api/upload` — form-data `file: <imagem>`
      - `GET /api/health`
      - `GET /uploads/<filename>`

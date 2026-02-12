@@ -1,0 +1,13 @@
+{
+  "name": "loja-aninha",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/blob": "latest",
+    "@vercel/kv": "latest"
+  }
+}

@@ -108,5 +108,5 @@ const CONFIG = {
   whatsappNumber: '5592984663068',
   adminUser: 'AnaSantos',
   adminPass: 'Asantos1969',
-  backendBaseUrl: 'http://localhost:5000',
+  backendBaseUrl: '',
 };

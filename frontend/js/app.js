@@ -6,8 +6,8 @@ let currentSlide = 0;
 let editingProductId = null;
 
 // Inicialização
-document.addEventListener('DOMContentLoaded', () => {
-  initProducts();
+document.addEventListener('DOMContentLoaded', async () => {
+  await initProducts();
   initCart();
   renderProducts();
   initSlider();
@@ -15,15 +15,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Produtos
-function initProducts() {
+async function initProducts() {
+  try {
+    const res = await fetch('/api/products');
+    const data = await res.json();
+    if (res.ok && data?.ok && Array.isArray(data.items)) {
+      products = data.items;
+      saveProducts();
+      return;
+    }
+  } catch {}
   const stored = localStorage.getItem('natura_products');
-  if (stored) {
-    products = JSON.parse(stored);
-  } else {
-    products = [...defaultProducts];
-    saveProducts();
-  }
-}
+  products = stored ? JSON.parse(stored) : [...defaultProducts];
+  saveProducts();
 
 function saveProducts() {
   localStorage.setItem('natura_products', JSON.stringify(products));
@@ -543,7 +547,7 @@ function closeProductForm() {
   document.getElementById('productFormModal').classList.remove('active');
 }
 
-function handleProductFormSubmit(e) {
+async function handleProductFormSubmit(e) {
   e.preventDefault();
   
   const productData = {
@@ -557,17 +561,45 @@ function handleProductFormSubmit(e) {
     isAvailable: document.getElementById('productAvailable').checked,
   };
   
-  if (editingProductId) {
-    const index = products.findIndex(p => p.id === editingProductId);
-    if (index !== -1) {
-      products[index] = { ...products[index], ...productData };
+  try {
+    if (editingProductId) {
+      const res = await fetch(`/api/products/${editingProductId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData),
+      });
+      const data = await res.json();
+      if (res.ok && data?.ok) {
+        const index = products.findIndex(p => p.id === editingProductId);
+        if (index !== -1) products[index] = data.item;
+        showNotification('Produto atualizado!');
+      } else {
+        throw new Error('Falha ao atualizar');
+      }
+    } else {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData),
+      });
+      const data = await res.json();
+      if (res.ok && data?.ok) {
+        products.unshift(data.item);
+        showNotification('Produto criado!');
+      } else {
+        throw new Error('Falha ao criar');
+      }
     }
-  } else {
-    const newProduct = {
-      id: Date.now().toString(),
-      ...productData,
-    };
-    products.push(newProduct);
+  } catch {
+    if (editingProductId) {
+      const index = products.findIndex(p => p.id === editingProductId);
+      if (index !== -1) products[index] = { ...products[index], ...productData };
+      showNotification('Atualizado (offline)');
+    } else {
+      const newProduct = { id: Date.now().toString(), ...productData };
+      products.unshift(newProduct);
+      showNotification('Criado (offline)');
+    }
   }
   
   saveProducts();
@@ -575,19 +607,19 @@ function handleProductFormSubmit(e) {
   updateAdminStats();
   renderAdminProducts();
   closeProductForm();
-  
-  showNotification(editingProductId ? 'Produto atualizado!' : 'Produto criado!');
 }
 
-function deleteProduct(productId) {
+async function deleteProduct(productId) {
   if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-  
+  try {
+    const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Falha ao excluir');
+  } catch {}
   products = products.filter(p => p.id !== productId);
   saveProducts();
   renderProducts();
   updateAdminStats();
   renderAdminProducts();
-  
   showNotification('Produto excluído!');
 }
 
@@ -693,11 +725,10 @@ function handleImageFileChange() {
   const input = document.getElementById('productImageFile');
   const file = input?.files?.[0];
   if (!file) return;
-  const form = new FormData();
-  form.append('file', file);
-  fetch(`${CONFIG.backendBaseUrl}/api/upload`, {
+  fetch(`${CONFIG.backendBaseUrl}/api/upload?filename=${encodeURIComponent(file.name)}`, {
     method: 'POST',
-    body: form,
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file,
   })
   .then(res => res.json())
   .then(data => {
@@ -707,11 +738,18 @@ function handleImageFileChange() {
       setImagePreview(data.url);
       showNotification('Imagem enviada com sucesso!');
     } else {
-      showNotification('Falha no upload da imagem', 'error');
+      throw new Error('Upload falhou');
     }
   })
   .catch(() => {
-    showNotification('Erro ao enviar imagem', 'error');
+    const reader = new FileReader();
+    reader.onload = () => {
+      const hidden = document.getElementById('productImage');
+      if (hidden) hidden.value = reader.result;
+      setImagePreview(reader.result);
+      showNotification('Prévia local carregada (modo offline)');
+    };
+    reader.readAsDataURL(file);
   });
 }
 
