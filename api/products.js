@@ -1,10 +1,21 @@
 export const config = { runtime: 'nodejs' };
 import { Redis } from '@upstash/redis';
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+const REDIS_URL =
+  process.env.UPSTASH_REDIS_REST_URL ||
+  process.env.UPSTASH_REDIS_URL ||
+  process.env.URL_REDIS ||
+  process.env.REDIS_URL;
+const REDIS_TOKEN =
+  process.env.UPSTASH_REDIS_REST_TOKEN ||
+  process.env.UPSTASH_REDIS_TOKEN ||
+  process.env.TOKEN_REDIS ||
+  process.env.REDIS_TOKEN;
+
+const redis =
+  REDIS_URL && REDIS_TOKEN
+    ? new Redis({ url: REDIS_URL, token: REDIS_TOKEN })
+    : null;
 
 const seedProducts = [
   { id: '1', name: 'Natura Luna', description: 'Perfume feminino floral, notas de jasmim e sândalo. Uma fragrância delicada e sofisticada para momentos especiais.', price: 149.9, category: 'perfumes', brand: 'Natura', image: 'images/product-perfume-1.png', stock: 10, isAvailable: true, createdAt: Date.now(), updatedAt: Date.now() },
@@ -18,6 +29,9 @@ const seedProducts = [
 ];
 
 async function listProducts() {
+  if (!redis) {
+    return seedProducts;
+  }
   let items = await redis.get('products');
   if (!items || !Array.isArray(items)) {
     await redis.set('products', seedProducts);
@@ -42,6 +56,10 @@ export default async function handler(req, res) {
           res.status(400).json({ ok: false, message: `Campo obrigatório: ${key}` });
           return;
         }
+      }
+      if (!redis) {
+        res.status(500).json({ ok: false, message: 'Redis não configurado. Adicione UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN.' });
+        return;
       }
       const items = await listProducts();
       const newItem = {

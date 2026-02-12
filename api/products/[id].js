@@ -1,12 +1,23 @@
 export const config = { runtime: 'nodejs' };
 import { Redis } from '@upstash/redis';
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+const REDIS_URL =
+  process.env.UPSTASH_REDIS_REST_URL ||
+  process.env.UPSTASH_REDIS_URL ||
+  process.env.URL_REDIS ||
+  process.env.REDIS_URL;
+const REDIS_TOKEN =
+  process.env.UPSTASH_REDIS_REST_TOKEN ||
+  process.env.UPSTASH_REDIS_TOKEN ||
+  process.env.TOKEN_REDIS ||
+  process.env.REDIS_TOKEN;
+const redis =
+  REDIS_URL && REDIS_TOKEN
+    ? new Redis({ url: REDIS_URL, token: REDIS_TOKEN })
+    : null;
 
 async function listProducts() {
+  if (!redis) return [];
   const items = await redis.get('products');
   return Array.isArray(items) ? items : [];
 }
@@ -28,6 +39,10 @@ export default async function handler(req, res) {
   }
   if (method === 'PUT' || method === 'PATCH') {
     try {
+      if (!redis) {
+        res.status(500).json({ ok: false, message: 'Redis não configurado. Adicione UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN.' });
+        return;
+      }
       const data = req.body || {};
       const updated = { ...items[index], ...data, updatedAt: Date.now() };
       items[index] = updated;
@@ -40,6 +55,10 @@ export default async function handler(req, res) {
     }
   }
   if (method === 'DELETE') {
+    if (!redis) {
+      res.status(500).json({ ok: false, message: 'Redis não configurado. Adicione UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN.' });
+      return;
+    }
     items = items.filter(p => p.id !== id);
     await redis.set('products', items);
     res.status(200).json({ ok: true });
