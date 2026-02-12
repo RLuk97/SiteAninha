@@ -1,8 +1,13 @@
 export const config = { runtime: 'nodejs' };
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
 
 async function listProducts() {
-  const items = await kv.get('products');
+  const items = await redis.get('products');
   return Array.isArray(items) ? items : [];
 }
 
@@ -26,7 +31,7 @@ export default async function handler(req, res) {
       const data = req.body || {};
       const updated = { ...items[index], ...data, updatedAt: Date.now() };
       items[index] = updated;
-      await kv.set('products', items);
+      await redis.set('products', items);
       res.status(200).json({ ok: true, item: updated });
       return;
     } catch {
@@ -36,7 +41,7 @@ export default async function handler(req, res) {
   }
   if (method === 'DELETE') {
     items = items.filter(p => p.id !== id);
-    await kv.set('products', items);
+    await redis.set('products', items);
     res.status(200).json({ ok: true });
     return;
   }

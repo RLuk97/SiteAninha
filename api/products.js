@@ -1,5 +1,10 @@
 export const config = { runtime: 'nodejs' };
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
 
 const seedProducts = [
   { id: '1', name: 'Natura Luna', description: 'Perfume feminino floral, notas de jasmim e sândalo. Uma fragrância delicada e sofisticada para momentos especiais.', price: 149.9, category: 'perfumes', brand: 'Natura', image: 'images/product-perfume-1.png', stock: 10, isAvailable: true, createdAt: Date.now(), updatedAt: Date.now() },
@@ -13,9 +18,9 @@ const seedProducts = [
 ];
 
 async function listProducts() {
-  let items = await kv.get('products');
+  let items = await redis.get('products');
   if (!items || !Array.isArray(items)) {
-    await kv.set('products', seedProducts);
+    await redis.set('products', seedProducts);
     items = seedProducts;
   }
   return items;
@@ -46,7 +51,7 @@ export default async function handler(req, res) {
         updatedAt: Date.now(),
       };
       const next = [newItem, ...items];
-      await kv.set('products', next);
+      await redis.set('products', next);
       res.status(201).json({ ok: true, item: newItem });
       return;
     } catch {
