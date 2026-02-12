@@ -1,50 +1,5 @@
 export const config = { runtime: 'nodejs' };
-import { Redis as UpstashRedis } from '@upstash/redis';
-import IORedis from 'ioredis';
-
-const REDIS_URL =
-  process.env.UPSTASH_REDIS_REST_URL ||
-  process.env.UPSTASH_REDIS_URL ||
-  process.env.URL_REDIS ||
-  process.env.REDIS_URL;
-const REDIS_TOKEN =
-  process.env.UPSTASH_REDIS_REST_TOKEN ||
-  process.env.UPSTASH_REDIS_TOKEN ||
-  process.env.TOKEN_REDIS ||
-  process.env.REDIS_TOKEN;
-
-const hasUpstash = !!(process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL) && !!(process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN);
-const upstash = hasUpstash ? new UpstashRedis({ url: REDIS_URL, token: REDIS_TOKEN }) : null;
-const hasDsn = !!(process.env.URL_REDIS || process.env.REDIS_URL) && !hasUpstash;
-const io = hasDsn ? new IORedis(REDIS_URL, { lazyConnect: true, tls: REDIS_URL.startsWith('rediss://') ? {} : undefined }) : null;
-const store = upstash
-  ? {
-      async get(k) {
-        const v = await upstash.get(k);
-        if (typeof v === 'string') {
-          try { return JSON.parse(v); } catch { return v; }
-        }
-        return v;
-      },
-      async set(k, v) {
-        await upstash.set(k, v);
-      },
-    }
-  : io
-  ? {
-      async get(k) {
-        const v = await io.get(k);
-        if (typeof v === 'string') {
-          try { return JSON.parse(v); } catch { return v; }
-        }
-        return v;
-      },
-      async set(k, v) {
-        const data = typeof v === 'string' ? v : JSON.stringify(v);
-        await io.set(k, data);
-      },
-    }
-  : null;
+import { sql } from '@vercel/postgres';
 
 const seedProducts = [
   { id: '1', name: 'Natura Luna', description: 'Perfume feminino floral, notas de jasmim e sândalo. Uma fragrância delicada e sofisticada para momentos especiais.', price: 149.9, category: 'perfumes', brand: 'Natura', image: 'images/product-perfume-1.png', stock: 10, isAvailable: true, createdAt: Date.now(), updatedAt: Date.now() },
@@ -57,16 +12,69 @@ const seedProducts = [
   { id: '8', name: 'Avon True Color', description: 'Paleta de sombras com 8 cores vibrantes. Alta pigmentação e durabilidade.', price: 69.9, category: 'maquiagem', brand: 'Avon', image: 'images/product-makeup-2.png', stock: 5, isAvailable: true, createdAt: Date.now(), updatedAt: Date.now() },
 ];
 
+async function ensureTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS products (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      price NUMERIC NOT NULL,
+      stock INTEGER NOT NULL,
+      category TEXT NOT NULL,
+      brand TEXT NOT NULL,
+      image TEXT NOT NULL,
+      is_available BOOLEAN NOT NULL,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    )
+  `;
+}
+
 async function listProducts() {
-  if (!store) {
+  await ensureTable();
+  const { rows } = await sql`
+    SELECT
+      id,
+      name,
+      description,
+      price,
+      stock,
+      category,
+      brand,
+      image,
+      is_available AS "isAvailable",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+    FROM products
+    ORDER BY created_at DESC
+  `;
+  if (!rows || rows.length === 0) {
+    for (const p of seedProducts) {
+      await sql`
+        INSERT INTO products (id, name, description, price, stock, category, brand, image, is_available, created_at, updated_at)
+        VALUES (${p.id}, ${p.name}, ${p.description}, ${p.price}, ${p.stock}, ${p.category}, ${p.brand}, ${p.image}, ${p.isAvailable}, ${p.createdAt}, ${p.updatedAt})
+        ON CONFLICT (id) DO NOTHING
+      `;
+    }
     return seedProducts;
   }
-  let items = await store.get('products');
-  if (!items || !Array.isArray(items)) {
-    await store.set('products', seedProducts);
-    items = seedProducts;
-  }
-  return items;
+  return rows;
+}
+
+function parseJson(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', c => chunks.push(c));
+    req.on('end', () => {
+      try {
+        const s = Buffer.concat(chunks).toString('utf8');
+        resolve(s ? JSON.parse(s) : {});
+      } catch (e) {
+        reject(e);
+      }
+    });
+    req.on('error', reject);
+  });
 }
 
 export default async function handler(req, res) {
@@ -78,7 +86,7 @@ export default async function handler(req, res) {
   }
   if (method === 'POST') {
     try {
-      const data = req.body || {};
+      const data = await parseJson(req);
       const required = ['name', 'description', 'price', 'stock', 'category', 'brand', 'image', 'isAvailable'];
       for (const key of required) {
         if (data[key] === undefined || data[key] === null) {
@@ -86,19 +94,24 @@ export default async function handler(req, res) {
           return;
         }
       }
-      if (!store) {
-        res.status(500).json({ ok: false, message: 'Redis não configurado. Adicione UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN.' });
-        return;
-      }
-      const items = await listProducts();
+      await ensureTable();
       const newItem = {
         id: Date.now().toString(),
-        ...data,
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        stock: data.stock,
+        category: data.category,
+        brand: data.brand,
+        image: data.image,
+        isAvailable: !!data.isAvailable,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
-      const next = [newItem, ...items];
-      await store.set('products', next);
+      await sql`
+        INSERT INTO products (id, name, description, price, stock, category, brand, image, is_available, created_at, updated_at)
+        VALUES (${newItem.id}, ${newItem.name}, ${newItem.description}, ${newItem.price}, ${newItem.stock}, ${newItem.category}, ${newItem.brand}, ${newItem.image}, ${newItem.isAvailable}, ${newItem.createdAt}, ${newItem.updatedAt})
+      `;
       res.status(201).json({ ok: true, item: newItem });
       return;
     } catch {

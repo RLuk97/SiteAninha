@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@vercel/blob": "latest",
-    "@upstash/redis": "latest",
-    "ioredis": "latest"
+    "@vercel/postgres": "latest"
   }
 }
