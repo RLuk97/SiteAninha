@@ -52,7 +52,7 @@ Sistema de catálogo e vendas com upload de imagens e checkout via WhatsApp.
 - `js/data.js`:
   - `backendBaseUrl`: `http://localhost:5000`
   - `adminUser`: `AnaSantos`
-  - `adminPass`: `Asantos1969`
+  - `adminPass`: `*******`
   - `whatsappNumber`: `5592984663068`
   - `deliveryFee`, `freeDeliveryThreshold`
 
